@@ -1,0 +1,204 @@
+﻿{
+  "HideTaskbarIcon": false,
+  "AlwaysOnTop": false,
+  "Transparency": 100,
+  "HighlightLogger": true,
+  "HighlightLogMessages": true,
+  "ColumnConfiguration": [
+    {
+      "Field": "SequenceNr",
+      "Name": "Nr"
+    },
+    {
+      "Field": "TimeStamp",
+      "Name": "Time"
+    },
+    {
+      "Field": "Level",
+      "Name": "Level"
+    },
+    {
+      "Field": "Properties",
+      "Property": "PID",
+      "Name": "PID"
+    },
+    {
+      "Field": "Properties",
+      "Property": "ThreadID",
+      "Name": "ThreadID"
+    },
+    {
+      "Field": "Properties",
+      "Property": "Class",
+      "Name": "Class"
+    },
+    {
+      "Field": "Properties",
+      "Property": "Method",
+      "Name": "Method"
+    },
+    {
+      "Field": "Message",
+      "Property": "",
+      "Name": "Message"
+    }
+  ],
+  "CsvHeaderColumns": [
+    {
+      "Field": "SequenceNr",
+      "Name": "sequence"
+    },
+    {
+      "Field": "ThreadName",
+      "Name": "time"
+    },
+    {
+      "Field": "LoggerName",
+      "Name": "level"
+    },
+    {
+      "Field": "Message",
+      "Name": "thread"
+    },
+    {
+      "Field": "Exception",
+      "Name": "class"
+    },
+    {
+      "Field": "CallSiteClass",
+      "Name": "method"
+    },
+    {
+      "Field": "Level",
+      "Name": "message"
+    },
+    {
+      "Field": "TimeStamp",
+      "Name": "exception"
+    },
+    {
+      "Field": "CallSiteMethod",
+      "Name": "file"
+    }
+  ],
+  "NotifyNewLogWhenHidden": true,
+  "AutoScrollToLastLog": true,
+  "GroupLogMessages": false,
+  "MessageCycleCount": 0,
+  "TimeStampFormatString": "G",
+  "RecursivlyEnableLoggers": true,
+  "MessageDetailConfiguration": [
+    {
+      "Field": "TimeStamp",
+      "Name": "Time"
+    },
+    {
+      "Field": "Level",
+      "Name": "Level"
+    },
+    {
+      "Field": "RootLoggerName",
+      "Name": "RootLoggerName"
+    },
+    {
+      "Field": "ThreadName",
+      "Name": "Thread"
+    },
+    {
+      "Field": "Message",
+      "Name": "Message"
+    }
+  ],
+  "ShowMsgDetailsProperties": false,
+  "ShowMsgDetailsException": true,
+  "DefaultFont": "Segoe UI, 9pt",
+  "LogListBackColor": "",
+  "LogMessageBackColor": "",
+  "TraceLevelColor": "Gray",
+  "DebugLevelColor": "Black",
+  "InfoLevelColor": "Green",
+  "WarnLevelColor": "Orange",
+  "ErrorLevelColor": "Red",
+  "FatalLevelColor": "Purple",
+  "LogLevelInfo": {
+    "Level": "Trace",
+    "Name": "Trace",
+    "Color": "Gray",
+    "Value": 10000,
+    "RangeMin": 0,
+    "RangeMax": 10000
+  },
+  "Receivers": [
+    {
+      "$type": "Log2Console.Receiver.UdpReceiver, Log2Console",
+      "Port": 7071,
+      "IpV6": false,
+      "Address": "",
+      "BufferSize": 10000,
+      "SampleClientConfig": "Configuration for log4net:\r\n<appender name=\"UdpAppender\" type=\"log4net.Appender.UdpAppender\">\r\n    <remoteAddress value=\"localhost\" />\r\n    <remotePort value=\"7071\" />\r\n    <layout type=\"log4net.Layout.XmlLayoutSchemaLog4j\" />\r\n</appender>"
+    }
+  ],
+  "Layout": {
+    "WindowPosition": "332, 152, 1137, 621",
+    "WindowState": "Normal",
+    "ShowLogDetailView": true,
+    "LogDetailViewSize": "881, 194",
+    "ShowLoggerTree": true,
+    "LoggerTreeSize": "237, 557",
+    "LogListViewColumnsWidths": [
+      37,
+      187,
+      107,
+      60,
+      60,
+      60,
+      60,
+      110
+    ]
+  },
+  "ColumnProperties": {
+    "PID": 3,
+    "ThreadID": 4,
+    "Class": 5,
+    "Method": 6
+  },
+  "CsvHeaderFieldTypes": {
+    "sequence": {
+      "Field": "SequenceNr",
+      "Name": "sequence"
+    },
+    "time": {
+      "Field": "ThreadName",
+      "Name": "time"
+    },
+    "level": {
+      "Field": "LoggerName",
+      "Name": "level"
+    },
+    "thread": {
+      "Field": "Message",
+      "Name": "thread"
+    },
+    "class": {
+      "Field": "Exception",
+      "Name": "class"
+    },
+    "method": {
+      "Field": "CallSiteClass",
+      "Name": "method"
+    },
+    "message": {
+      "Field": "Level",
+      "Name": "message"
+    },
+    "exception": {
+      "Field": "TimeStamp",
+      "Name": "exception"
+    },
+    "file": {
+      "Field": "CallSiteMethod",
+      "Name": "file"
+    }
+  },
+  "SourceFileLocationMap": {}
+}

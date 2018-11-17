@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Log2Console")]
-[assembly: AssemblyDescription("Log2Console is an advanced log message viewer for log4net, log4j and log4cxx.")]
+[assembly: AssemblyDescription("Log2Console is an advanced log message viewer for log4net.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Rémy Baudet aka Statyk7")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Log2Console")]
-[assembly: AssemblyCopyright("Copyright © Rémy Baudet 2010")]
+[assembly: AssemblyCopyright("Copyright © 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -28,5 +28,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.6.0.2")]
-[assembly: AssemblyFileVersion("1.6.0.2")]
+[assembly: AssemblyVersion("1.7.0.0")]
+[assembly: AssemblyFileVersion("1.7.0.0")]

@@ -1,18 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.ComponentModel;
-using System.Drawing;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Windows.Forms;
-
+using Log2Console.Components.Extensions;
+using Log2Console.Core;
 using Log2Console.Log;
 using Log2Console.Receiver;
-
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+using System.Windows.Forms;
 
 namespace Log2Console.Settings
 {
-   
+
 
     [Serializable]
     public sealed class UserSettings
@@ -56,15 +57,12 @@ namespace Log2Console.Settings
         };
 
         [NonSerialized]
-        private const string SettingsFileName = "UserSettings.dat";
-
-        [NonSerialized]
         private Dictionary<string, int> _columnProperties = new Dictionary<string, int>();
 
-        [NonSerialized] 
+        [NonSerialized]
         private Dictionary<string, FieldType> _csvHeaderFieldTypes;
 
-        [NonSerialized] 
+        [NonSerialized]
         private Dictionary<string, string> _sourceCodeLocationMap;
 
         private static UserSettings _instance;
@@ -153,36 +151,53 @@ namespace Log2Console.Settings
 
             string settingsFilePath = GetSettingsFilePath();
             if (!File.Exists(settingsFilePath))
+            {
                 return ok;
+            }
 
             try
             {
-                using (FileStream fs = new FileStream(settingsFilePath, FileMode.Open))
+                if (Log2ConsoleConfig.UserSettings.Storage.UseJsonFormat)
                 {
-                    if (fs.Length > 0)
+                    var contents = File.ReadAllText(settingsFilePath, Encoding.UTF8);
+                    _instance = contents.FromJson<UserSettings>();
+                }
+                else
+                {
+                    using (FileStream fs = new FileStream(settingsFilePath, FileMode.Open))
                     {
-                        BinaryFormatter bf = new BinaryFormatter();
-                        _instance = bf.Deserialize(fs) as UserSettings;
-
-                        // During 1st load, some members are set to null
-                        if (_instance != null)
+                        if (fs.Length > 0)
                         {
-                            if (_instance._receivers == null)
-                                _instance._receivers = new List<IReceiver>();
-
-                            if (_instance._layout == null)
-                                _instance._layout = new LayoutSettings();
+                            BinaryFormatter bf = new BinaryFormatter();
+                            _instance = bf.Deserialize(fs) as UserSettings;
                         }
-
-                        ok = true;
                     }
                 }
+
+
+                // During 1st load, some members are set to null
+                if (_instance != null)
+                {
+                    if (_instance._receivers == null)
+                    {
+                        _instance._receivers = new List<IReceiver>();
+                    }
+
+                    if (_instance._layout == null)
+                    {
+                        _instance._layout = new LayoutSettings();
+                    }
+                }
+
+                ok = true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MessageBox.Show(ex.ToString());
                 // The settings file might be corrupted or from too different version, delete it...
                 try
                 {
+                    MessageBox.Show($"Deleting outdated settings at: 'settingsFilePath'");
                     File.Delete(settingsFilePath);
                 }
                 catch
@@ -196,22 +211,40 @@ namespace Log2Console.Settings
 
         private static string GetSettingsFilePath()
         {
-            string userDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            
-            DirectoryInfo di = new DirectoryInfo(userDir);
-            di = di.CreateSubdirectory("Log2Console");
+            var SettingsFileName = Log2ConsoleConfig.UserSettings.Storage.UseJsonFormat
+                    ? "Log2Console.UserSettings.json" : "UserSettings.dat";
 
-            return di.FullName + Path.DirectorySeparatorChar + SettingsFileName;
+            if (Log2ConsoleConfig.UserSettings.Storage.UseAppDir)
+            {
+                string appDir = AppDomain.CurrentDomain.BaseDirectory;
+                return Path.Combine(appDir, SettingsFileName);
+            }
+            else
+            {
+                string userDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+                DirectoryInfo di = new DirectoryInfo(userDir);
+                di = di.CreateSubdirectory("Log2Console");
+
+                return Path.Combine(di.FullName, SettingsFileName);
+            }
         }
 
         public void Save()
         {
             string settingsFilePath = GetSettingsFilePath();
 
-            using (FileStream fs = new FileStream(settingsFilePath, FileMode.Create))
+            if (Log2ConsoleConfig.UserSettings.Storage.UseJsonFormat)
             {
-                BinaryFormatter bf = new BinaryFormatter();
-                bf.Serialize(fs, this);
+                File.WriteAllText(settingsFilePath, this.ToJson(), Encoding.UTF8);
+            }
+            else
+            {
+                using (FileStream fs = new FileStream(settingsFilePath, FileMode.Create))
+                {
+                    BinaryFormatter bf = new BinaryFormatter();
+                    bf.Serialize(fs, this);
+                }
             }
         }
 
@@ -223,7 +256,7 @@ namespace Log2Console.Settings
                 receiver.Terminate();
             }
             _receivers.Clear();
-        }        
+        }
 
         [Category("Appearance")]
         [Description("Hides the taskbar icon, only the tray icon will remain visible.")]
@@ -267,11 +300,11 @@ namespace Log2Console.Settings
         {
             get { return _highlightLogMessages; }
             set { _highlightLogMessages = value; }
-        }        
+        }
 
         [Category("Columns")]
         [DisplayName("Column Settings")]
-        [Description("Configure which Columns to Display")]        
+        [Description("Configure which Columns to Display")]
         public FieldType[] ColumnConfiguration
         {
             get { return _columnConfiguration ?? (ColumnConfiguration = DefaultColumnConfiguration); }
@@ -285,7 +318,7 @@ namespace Log2Console.Settings
 
         [Category("Columns")]
         [DisplayName("CSV File Header Column Settings")]
-        [Description("Configures which columns maps to which fields when auto detecting the CSV structure based on the header")]        
+        [Description("Configures which columns maps to which fields when auto detecting the CSV structure based on the header")]
         public FieldType[] CsvHeaderColumns
         {
             get { return _csvColumnHeaderFields ?? (CsvHeaderColumns = DefaultCsvColumnHeaderConfiguration); }
@@ -358,7 +391,7 @@ namespace Log2Console.Settings
                 // Check validity
                 try
                 {
-                    string str= DateTime.Now.ToString(value); // If error, will throw FormatException
+                    string str = DateTime.Now.ToString(value); // If error, will throw FormatException
                     _timeStampFormatString = value;
                 }
                 catch (FormatException ex)
@@ -413,8 +446,8 @@ namespace Log2Console.Settings
         [DisplayName("Default Font")]
         public Font DefaultFont
         {
-          get { return _defaultFont; }
-          set { _defaultFont = value; }
+            get { return _defaultFont; }
+            set { _defaultFont = value; }
         }
 
         [Category("Fonts")]
@@ -516,7 +549,7 @@ namespace Log2Console.Settings
         /// This setting is not available through the Settings PropertyGrid.
         /// </summary>
         [Browsable(false)]
-        internal LogLevelInfo LogLevelInfo
+        public LogLevelInfo LogLevelInfo
         {
             get { return _logLevelInfo; }
             set { _logLevelInfo = value; }
@@ -526,7 +559,7 @@ namespace Log2Console.Settings
         /// This setting is not available through the Settings PropertyGrid.
         /// </summary>
         [Browsable(false)]
-        internal List<IReceiver> Receivers
+        public List<IReceiver> Receivers
         {
             get { return _receivers; }
             set { _receivers = value; }
@@ -536,7 +569,7 @@ namespace Log2Console.Settings
         /// This setting is not available through the Settings PropertyGrid.
         /// </summary>
         [Browsable(false)]
-        internal LayoutSettings Layout
+        public LayoutSettings Layout
         {
             get { return _layout; }
             set { _layout = value; }
@@ -548,7 +581,10 @@ namespace Log2Console.Settings
             get
             {
                 if (_columnProperties == null)
+                {
                     UpdateColumnPropeties();
+                }
+
                 return _columnProperties;
             }
             set { _columnProperties = value; }
@@ -560,7 +596,10 @@ namespace Log2Console.Settings
             get
             {
                 if (_csvHeaderFieldTypes == null)
+                {
                     UpdateCsvColumnHeader();
+                }
+
                 return _csvHeaderFieldTypes;
             }
             set { _csvHeaderFieldTypes = value; }
@@ -572,7 +611,10 @@ namespace Log2Console.Settings
             get
             {
                 if (_sourceCodeLocationMap == null)
+                {
                     UpdateSourceCodeLocationMap();
+                }
+
                 return _sourceCodeLocationMap;
             }
             set { _sourceCodeLocationMap = value; }
@@ -581,14 +623,16 @@ namespace Log2Console.Settings
         private void UpdateColumnPropeties()
         {
             _columnProperties = new Dictionary<string, int>();
-            for(int i=0; i<ColumnConfiguration.Length; i++)
+            for (int i = 0; i < ColumnConfiguration.Length; i++)
             {
                 try
                 {
                     if (ColumnConfiguration[i].Field == LogMessageField.Properties)
+                    {
                         _columnProperties.Add(ColumnConfiguration[i].Property, i);
+                    }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message, "Error Configuring Columns");
                 }
@@ -607,9 +651,12 @@ namespace Log2Console.Settings
         private void UpdateSourceCodeLocationMap()
         {
             _sourceCodeLocationMap = new Dictionary<string, string>();
-            foreach (var map in SourceLocationMapConfiguration)
+            if (SourceLocationMapConfiguration != null)
             {
-                _sourceCodeLocationMap.Add(map.LogSource, map.LocalSource);
+                foreach (var map in SourceLocationMapConfiguration)
+                {
+                    _sourceCodeLocationMap.Add(map.LogSource, map.LocalSource);
+                }
             }
         }
     }

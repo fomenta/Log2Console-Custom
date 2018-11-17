@@ -1,11 +1,10 @@
+using Log2Console.Log;
 using System;
 using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-
-using Log2Console.Log;
 
 
 namespace Log2Console.Receiver
@@ -21,45 +20,23 @@ namespace Log2Console.Receiver
         [NonSerialized]
         private IPEndPoint _remoteEndPoint;
 
-        private bool _ipv6;
-        private int _port = 7071;
-        private string _address = String.Empty;
-        private int _bufferSize = 10000;
-
-
         [Category("Configuration")]
         [DisplayName("UDP Port Number")]
-        [DefaultValue(7071)]
-        public int Port
-        {
-            get { return _port; }
-            set { _port = value; }
-        }
+        //[DefaultValue(7071)]
+        public int Port { get; set; } = 7071;
 
         [Category("Configuration")]
         [DisplayName("Use IPv6 Addresses")]
-        [DefaultValue(false)]
-        public bool IpV6
-        {
-            get { return _ipv6; }
-            set { _ipv6 = value; }
-        }
+        //[DefaultValue(false)]
+        public bool IpV6 { get; set; }
 
         [Category("Configuration")]
         [DisplayName("Multicast Group Address (Optional)")]
-        public string Address
-        {
-            get { return _address; }
-            set { _address = value; }
-        }
+        public string Address { get; set; } = string.Empty;
 
         [Category("Configuration")]
         [DisplayName("Receive Buffer Size")]
-        public int BufferSize
-        {
-            get { return _bufferSize; }
-            set { _bufferSize = value; }
-        }
+        public int BufferSize { get; set; } = 10000;
 
 
         #region IReceiver Members
@@ -73,7 +50,7 @@ namespace Log2Console.Receiver
                     "Configuration for log4net:" + Environment.NewLine +
                     "<appender name=\"UdpAppender\" type=\"log4net.Appender.UdpAppender\">" + Environment.NewLine +
                     "    <remoteAddress value=\"localhost\" />" + Environment.NewLine +
-                    "    <remotePort value=\"7071\" />" + Environment.NewLine +
+                   $"    <remotePort value=\"{Port}\" />" + Environment.NewLine +
                     "    <layout type=\"log4net.Layout.XmlLayoutSchemaLog4j\" />" + Environment.NewLine +
                     "</appender>";
             }
@@ -82,18 +59,24 @@ namespace Log2Console.Receiver
         public override void Initialize()
         {
             if ((_worker != null) && _worker.IsAlive)
+            {
                 return;
+            }
 
             // Init connexion here, before starting the thread, to know the status now
             _remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-            _udpClient = _ipv6 ? new UdpClient(_port, AddressFamily.InterNetworkV6) : new UdpClient(_port);
-            _udpClient.Client.ReceiveBufferSize = _bufferSize;
-            if (!String.IsNullOrEmpty(_address))
-                _udpClient.JoinMulticastGroup(IPAddress.Parse(_address));
+            _udpClient = IpV6 ? new UdpClient(Port, AddressFamily.InterNetworkV6) : new UdpClient(Port);
+            _udpClient.Client.ReceiveBufferSize = BufferSize;
+            if (!String.IsNullOrEmpty(Address))
+            {
+                _udpClient.JoinMulticastGroup(IPAddress.Parse(Address));
+            }
 
             // We need a working thread
-            _worker = new Thread(Start);
-            _worker.IsBackground = true;
+            _worker = new Thread(Start)
+            {
+                IsBackground = true
+            };
             _worker.Start();
         }
 
@@ -108,7 +91,10 @@ namespace Log2Console.Receiver
             }
 
             if ((_worker != null) && _worker.IsAlive)
+            {
                 _worker.Abort();
+            }
+
             _worker = null;
         }
 
@@ -131,7 +117,9 @@ namespace Log2Console.Receiver
                     //  Console.WriteLine("Count: " + count++);
 
                     if (Notifiable == null)
+                    {
                         continue;
+                    }
 
                     LogMessage logMsg = ReceiverUtils.ParseLog4JXmlLogEvent(loggingEvent, "UdpLogger");
                     logMsg.RootLoggerName = _remoteEndPoint.Address.ToString().Replace(".", "-");
